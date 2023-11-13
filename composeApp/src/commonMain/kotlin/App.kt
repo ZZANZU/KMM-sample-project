@@ -1,10 +1,8 @@
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,11 +13,12 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.*
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
+
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun App() {
+fun App(countries: List<Country> = countries()) {
     MaterialTheme {
-        var location by remember { mutableStateOf("Europe/Paris") }
+        var showCountries by remember { mutableStateOf(false) }
         var timeAtLocation by remember { mutableStateOf("No location selected") }
 
         Column(modifier = Modifier.padding(40.dp)) {
@@ -31,35 +30,51 @@ fun App() {
                     .align(Alignment.CenterHorizontally)
             )
 
-            TextField(
-                value = location,
-                modifier = Modifier.padding(top = 10.dp).align(Alignment.CenterHorizontally),
-                onValueChange = {
-                    location = it
+            Row(modifier = Modifier.padding(start = 20.dp, top = 10.dp)) {
+                DropdownMenu(
+                    expanded = showCountries,
+                    onDismissRequest = { showCountries = false }
+                ) {
+                    countries.forEach { (name, zone) ->
+                        DropdownMenuItem(
+                            onClick = {
+                                timeAtLocation = currentTimeAt(name, zone)
+                                showCountries = false
+                            }
+                        ) {
+                            Text(name)
+                        }
+                    }
                 }
-            )
+            }
 
             Button(
                 modifier = Modifier.padding(top = 10.dp).align(Alignment.CenterHorizontally),
                 onClick = {
-                    timeAtLocation = currentTimeAt(location) ?: "Invalid location"
+                    showCountries = !showCountries
                 }
             ) {
-                Text("Show Time At Location")
+                Text("Select Location")
             }
         }
     }
 }
 
-fun currentTimeAt(location: String): String? {
+data class Country(val name: String, val zone: TimeZone)
+
+fun currentTimeAt(location: String, zone: TimeZone): String {
     fun LocalTime.formatted() = "$hour:$minute:$second"
 
-    return try {
-        val time = Clock.System.now()
-        val zone = TimeZone.of(location)
-        val localTime = time.toLocalDateTime(zone).time
-        "${location}의 시간은 ${localTime.formatted()}"
-    } catch (e: IllegalTimeZoneException) {
-        null
-    }
+    val time = Clock.System.now()
+    val localTime = time.toLocalDateTime(zone).time
+
+    return "${location}의 시간은 ${localTime.formatted()}"
 }
+
+fun countries() = listOf(
+    Country("Japan", TimeZone.of("Asia/Tokyo")),
+    Country("France", TimeZone.of("Europe/Paris")),
+    Country("Mexico", TimeZone.of("America/Mexico_City")),
+    Country("Indonesia", TimeZone.of("Asia/Jakarta")),
+    Country("Egypt", TimeZone.of("Africa/Cairo")),
+)
