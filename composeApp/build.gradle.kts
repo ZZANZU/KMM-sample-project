@@ -32,6 +32,18 @@ kotlin {
     sourceSets {
         val desktopMain by getting
         
+        val commonMain by getting {
+            dependencies {
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material)
+                @OptIn(ExperimentalComposeLibrary::class)
+                implementation(compose.components.resources)
+
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+            }
+        }
+
         androidMain.dependencies {
             implementation(libs.compose.ui)
             implementation(libs.compose.ui.tooling.preview)
